@@ -20,7 +20,7 @@ train_loss_list = []
 test_loss_list = []
 epoch_list= []
 
-batch_size = 25
+batch_size = 50
 epochs = 20
 
 class CSV_dataset(Dataset):
@@ -32,6 +32,8 @@ class CSV_dataset(Dataset):
         x = read_csv.iloc[0:num_rows, 0:num_cols - 1].values
         y = read_csv.iloc[0:num_rows, num_cols - 1].values
         
+        self.y_list = y
+
         self.X_tensor = torch.tensor(x, dtype = torch.float32)
 
         self.y_tensor = le.fit_transform(y)
@@ -72,6 +74,15 @@ train_dataloader = DataLoader(train_dataset, batch_size=batch_size)
 test_dataloader = DataLoader(test_dataset, batch_size=batch_size)
 val_dataloader = DataLoader(val_dataset, batch_size=batch_size)
 
+def data_stats(dataset):
+    genre_dict = {}
+    genre_list = dataset.y_list
+    for genre in genre_list:
+        val = genre_dict.get(genre, 0)
+        genre_dict[genre] = val+1
+    print("number of genres are", len(genre_dict))
+    for item in genre_dict.items():
+        print(item[0], "has", item[1], "instances")
 
 def add_points(x_list, y_list, clr, label):
     plt.plot(x_list, y_list, color = clr, marker = "o", label = label)
@@ -140,7 +151,7 @@ for t in range(epochs):
     print(f"Epoch {t+1}\n-------------------------------")
     train(train_dataloader, model, loss_fn, optimizer, train_correct_classes, train_total_classes)
     test(val_dataloader, model, loss_fn, valid_correct_classes, valid_total_classes, "valid")
-    
+
 
 test(test_dataloader, model, loss_fn, test_correct_classes, test_total_classes, "test")
 
@@ -157,4 +168,12 @@ add_points(epoch_list, train_loss_list, "red", "train")
 add_points(epoch_list, test_loss_list, "blue", "test")
 plt.show()
 
+print("train dataset stats")
+data_stats(train_dataset)
+print()
+print("validation dataset stats")
+data_stats(val_dataset)
+print()
+print("test dataset stats")
+data_stats(test_dataset)
 
